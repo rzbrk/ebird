@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Define the folder with the individual logging scripts
+script_dir="./enabled"
+
+# Search for the logging scripts (*.sh). Execute these
+# scripts
+for script in `ls $script_dir/*.sh`
+do
+  . $script
+done
