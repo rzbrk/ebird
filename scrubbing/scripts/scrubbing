@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# First command line arg (optional): config file
+# Std config file: /etc/scrubbing.conf
+# Finally, we have to check, if std config file
+# exists and is readable for us. If not, exit.
+if [[ $# -gt 0 ]]; then
+  conf_file=$1
+else
+  conf_file="/etc/scrubbing.conf"
+fi
+
+if [[ ! -r $conf_file || ! -f $conf_file ]]; then
+  echo "No config file found or config file missing. Exiting."
+  exit 1
+fi
+
+# Read in config file. We shall get definitions for variables
+# dir_clean and free_space
+free_space=10000000			# default value
+source $conf_file
+
+# Check, if directory exist
+if [[ ! -d $dir_clean ]]; then
+  echo "Directory $dir_clean doesn't exist. Exiting."
+  exit 1
+fi
+
+# Initialize variable $disk_free which holds the
+# free disk space (kbytes) of partition where $dir_clean
+# resides in:
+disk_free=$(df $dir_clean | awk 'FNR == 2 {print $4}')
+
+# Get a sorted array of files in $dir_clean, beginning
+# with the oldest one:
+OIFS=$IFS
+IFS=$'\n'
+file_list=( $(find $dir_clean -type f -print0 | xargs -0 ls -1tr) )
+IFS=$OIFS
+
+# Finally, get the number of files and initialize counter
+n_files=${#file_list[@]}
+n=0
+
+while [[ $disk_free -lt $free_space && $n -lt $n_files ]];
+do
+  # Debugging output
+  # echo "$n, $disk_free, $free_space, ${file_list[$n]}"
+
+  # We are here, because we have not enough free space
+  # ($disk_free < $free_space) and there are files in
+  # $dir_clean that can be deleted ($n < $n_files).
+  # Hence, delete the oldest file, which is the n-th
+  # element of array $file_list
+  rm "${file_list[$n]}"
+
+  # Finally calculate actual free disk space after 
+  # deletion of the file ...
+  disk_free=$(df $dir_clean | awk 'FNR == 2 {print $4}')
+  # ... and increment counter
+  n=$((n+1))
+done 
+
+# Now, get rid of any empty subdirectories
+cd $dir_clean
+find . -type d -empty -delete
+
+# Exit with no error
+exit 0
