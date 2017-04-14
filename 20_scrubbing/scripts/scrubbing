@@ -7,7 +7,7 @@
 if [[ $# -gt 0 ]]; then
   conf_file=$1
 else
-  conf_file="/etc/scrubbing.conf"
+  conf_file="/etc/ebird/scrubbing.conf"
 fi
 
 if [[ ! -r $conf_file || ! -f $conf_file ]]; then
