@@ -154,7 +154,7 @@ der Raspberry Pi ggf. identifiziert werden.
 
 [NOTE]
 Die MAC-Adressen der Raspberry Pi-Geräte beginnen stets mit
-`B8:27:EB:`[https://raspberrypi.stackexchange.com/questions/28365/what-are-the-possible-ouis-for-the-ethernet-mac-address#28376].
+`B8:27:EB:`footnote:[https://raspberrypi.stackexchange.com/questions/28365/what-are-the-possible-ouis-for-the-ethernet-mac-address#28376].
 So können Raspberry Pi-Geräte leicht in den Listings von IP-Scannern gefunden
 werden.
 
