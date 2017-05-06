@@ -88,7 +88,7 @@ Startpositionen der Partitionen bestimmt werden:
 
 . Partitionen Raspbian Image-Datei aus vorhergehenden Screenshot
 |===========================================================================
-|Bezeichn. aus fdisk |Sektor Anfang |Anfang in Bytes |Raspbian Partition |Typ
+|**Bezeichn. aus fdisk** |**Sektor Anfang** |**Anfang in Bytes** |**Raspbian Partition** |**Typ**
 |2017-03-02-raspbian-jessie-lite.img1 |8192 |512 * 8192 = 4194304 |/boot |vfat
 |2017-03-02-raspbian-jessie-lite.img1 |137216 |512 * 137216 = 70254592 |/ |ext4
 |===========================================================================
@@ -98,8 +98,7 @@ einzuhängen. Dazu wird zunächst temporär ein Verzeichnis /tmp/raspi als
 Mount-Point erzeugt:
 
  loc $ mkdir /tmp/raspi
- loc $ sudo mount -v -o offset=4194304 -t vfat \
- raspbian.img /tmp/raspi
+ loc $ sudo mount -v -o offset=4194304 -t vfat raspbian.img /tmp/raspi
 
 [NOTE]
 Der Wert für `offset` sowie der Name der Image-Datei müssen durch die
