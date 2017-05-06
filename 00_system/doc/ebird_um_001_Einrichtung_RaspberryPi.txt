@@ -1,0 +1,257 @@
+Aufbau und Konfiguration Raspberry Pi
+=====================================
+Jan Grosser <email@jan-grosser.de>
+:docid: Dokumenten ID: EBIRD-UM-001
+:website: https://github.com/rzbrk/ebird
+:toc:
+:numbered:
+
+Einführung
+----------
+Dieses Dokument beschreibt die grundlegende Einrichtung eines Raspberry Pis für
+das Nistkasten-Projekt. Es wird die Installation und Konfiguration des
+Betriebssystems beschrieben sowie die Einrichtung der Hardware wie WiFi oder
+Kamera.
+
+Hardware
+--------
+Folgende Hardware wird für den Aufbau benötigt:
+
+* Raspberry Pi Computer; diese Anleitung wurde mit folgenden Modellen getestet:
+** Raspberry Pi B+
+* Spannungsversorgung für den Raspberry Pi
+* Raspberry Pi Camera
+* SD-Karte, empfehlenswert: Class 10 und 16GByte
+* hostapd-kompatibler WiFi USB-Adapter, bspw.:
+** Edimax EW7811UN
+
+Software
+--------
+Software für den Raspbery Pi
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Für den Raspberry Pi Computer wird das Betriebssystem Raspbian benötigt. Auf den
+Raspberry Pi wird später überwiegend „headless“ über das Netzwerk zugegriffen,
+also ohne direkt angeschlossene Ein- und Ausgabegeräte wie Monitor oder
+Tastatur. Aus diesem Grunde empfiehlt es sich, Raspbian Lite, eine schlanke
+Betriebssystem-Version ohne grafischen Desktop, zu verwenden. Images des
+Betriebssystems können von der Webseite
+https://www.raspberrypi.org/downloads/raspbian/ heruntergeladen werden kann.
+Alle weitere erforderliche Software wird später über die Raspbian
+Paketverwaltung oder aus Repositories nachinstalliert.
+
+Software für den Arbeitsplatz-Computer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Für den Arbeitsplatz-Computer, über den die Konfiguration und Steuerung des
+Raspberry Pi Computers erfolgt, eignet sich zunächst jedes Betriebssystem.
+Folgende Anwendungen werden benötigt:
+
+* Webbrowser
+* SSH-Client
+* Programm zum Entpacken von ZIP-Archiven
+* Programm zum Beschreiben der SD-Karte mit dem Betriebssystem-Image
+
+Manipulation des Raspbian Images
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Das Image von Raspbian befindet sich in einer ZIP-Datei, die zunächst entpackt
+werden soll.
+Das entpackte Image hat üblicherweise die Dateiendung „img“. Das Image soll nun
+vor dem Kopieren auf die Speicherkarte auf dem Arbeitsplatz-Computer manipuliert
+werden. Durch die Manipulationen kann man Raspbian direkt „headless“ auf dem
+Raspberry Pi booten, benötigt also weder Monitor noch Tastatur/Maus.
+
+Anleitung für Linux
++++++++++++++++++++
+In der Image-Datei von Raspbian befinden sich zwei Partitionen, deren Start- und
+Endpositionen von der Version von Raspbian abhöngen können. Um die
+Partitionsdaten bestimmen zu können, untersuchen wir den Inhalt der Image-Datei
+mit dem Programm fdisk1. In einem Terminal führen wir den Befehl
+
+ loc $ fdisk raspbian.img
+
+aus. Der Dateiname raspbian.img ist durch den (versionsabhängigen) tatsächlichen
+Namen der Image-Datei zu ersetzen. Eine Beispielausgabe sieht wie folgt aus:
+
+[[abb-fdisk-raspbian]]
+.Screenshot der Ausgabe von fdisk für eine Raspbian Image-Datei
+image::images/fdisk-raspbian.png[fdisk Raspbian Image]
+
+Nach Aufruf des Befehls erscheint eine Eingabeaufforderung:
+
+ Befehl (m für Hilfe): 
+
+Dort wurde der Befehl `p` eingegeben, um sich Informationen zu den Partitionen
+in der Image-Datei anzusehen. Nach dieser Befehlseingabe kann das Programm fdisk
+mit dem Befehl `q` verlassen werden.
+
+Aus dem Beispiel-Screenshot aus <<abb-fdisk-raspbian,Abbildung 1>> können die
+Startpositionen der Partitionen bestimmt werden:
+
+. Partitionen Raspbian Image-Datei aus vorhergehenden Screenshot
+|===========================================================================
+|Bezeichn. aus fdisk |Sektor Anfang |Anfang in Bytes |Raspbian Partition |Typ
+|2017-03-02-raspbian-jessie-lite.img1 |8192 |512 * 8192 = 4194304 |/boot |vfat
+|2017-03-02-raspbian-jessie-lite.img1 |137216 |512 * 137216 = 70254592 |/ |ext4
+|===========================================================================
+
+Für die Manipulationen ist es lediglich erforderlich, die Boot-Partition
+einzuhängen. Dazu wird zunächst temporär ein Verzeichnis /tmp/raspi als
+Mount-Point erzeugt:
+
+ loc $ mkdir /tmp/raspi
+ loc $ sudo mount -v -o offset=4194304 -t vfat \
+ raspbian.img /tmp/raspi
+
+[NOTE]
+Der Wert für `offset` sowie der Name der Image-Datei müssen durch die
+tatsächlichen Parameter ersetzt werden.
+
+Nun wird in der Boot-Partition eine leere Datei ssh angelegt. Danach wird die
+Partition wieder aushängt bzw. unmountet:
+
+ loc $ sudo touch /tmp/raspi/ssh
+ loc $ sudo umount /temp/raspi
+
+Jetzt kann die Image-Datei auf die SD-Karte kopiert werden. Durch die leere
+Datei ssh in der Boot-Partition wird der ssh-Daemon gestartet, so daß ein
+Zugriff auf den Raspberry Pi über das Netzwerk möglich ist.
+
+Anleitung für Windows
+^^^^^^^^^^^^^^^^^^^^^
+Diese Anleitung muß noch geschrieben werden.
+
+Kopieren des Raspbian Images auf die SD-Karte
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Damit der Raspbian ordentlich booten kann, muß ein Image des Betriebssystems auf
+die SD-Karte kopiert werden. Anleitungen für das Kopieren der Images für
+verschiedene Betriebssysteme auf dem Arbeitsplatz-Computer findet man auf der
+Webseite
+https://www.raspberrypi.org/documentation/installation/installing-images/README.md.
+
+Erststart von Raspbian und grundlegende Konfiguration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Vorbereitung der Hardware des Raspberry Pi und Booten
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Verbinden Sie das CSI-Kabel der Kamera mit dem Raspberry Pi. Schließen Sie den
+WiFi USB-Adapter an. Verbinden Sie den Raspberry Pi mit einem Netzwerkkabel mit
+Ihrem Netzwerk. Stecken Sie die mit dem Betriebssystem vorbereitete SD-Karte in
+den Karten-Schlitz. Zum Schluß verbinden Sie das Netzteil mit dem Raspberry Pi,
+um ihn zu booten.
+
+Ermittlung der IP-Adresse des Raspberry Pi im Netzwerk
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Der Raspberry Pi besorgt sich per DHCP im lokalen Netzwerk eine
+IP-Konfiguration.  Die IP-Adresse muß nun herausgefunden werden, um sich vom
+Arbeitsplatz-Computer aus mit dem Raspberry Pi zu verbinden. Je nach
+Konfiguration und Betriebssystem-Umgebung gibt es hier verschiedene
+Möglichkeiten:
+
+* Bei einigen Heimroutern läßt sich über die Verwaltungsoberfläche eine Liste der
+Netzwerkgeräte mit ihren IP-Adressen im lokalen Netzwerk anzeigen. Hierüber kann
+der Raspberry Pi ggf. identifiziert werden.
+* Unter Linux kann man einen IP-Scan mit dem Tool `nmap` machen: `nmap -sP
+192.168.1.*` (Adressbereich auf die eigene Situation anpassen).
+* Unter Windows kann man einen IP-Scan mit dem Tool „Angry IP Scanner“
+(http://www.angryip.org) durchführen.
+
+[NOTE]
+Die MAC-Adressen der Raspberry Pi-Geräte beginnen stets mit
+`B8:27:EB:`[https://raspberrypi.stackexchange.com/questions/28365/what-are-the-possible-ouis-for-the-ethernet-mac-address#28376].
+So können Raspberry Pi-Geräte leicht in den Listings von IP-Scannern gefunden
+werden.
+
+
+Erster Login über ssh
+^^^^^^^^^^^^^^^^^^^^^
+Ist die IP-Adresse des Raspberry Pi bekannt, kann man sich mit einem ssh-Client
+mit dem Raspberry Pi verbinden. In Raspbian ist werksseitig der User `pi` mit dem
+Kennwort `raspberry` konfiguriert.
+
+In Linux öffnet man ein Terminal und gibt den Befehl
+
+ loc $ ssh pi@192.168.1.100
+
+ein, wobei die IP-Adresse durch die tatsächliche Adresse des Raspberry Pi zu
+ersetzen ist. Es erscheint eine Konsole des Raspberry Pi für den User `pi`.
+In Windows kann man sich mit dem ssh-Client PuTTY (http://www.putty.org/) in
+analoger Weise mit dem Raspberry Pi verbinden.
+
+Konfiguration mit Raspi-Config
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Das zentrale Konfigurations-Programm raspi-config wird wie folgt gestartet:
+
+ pi $ sudo raspi-config
+
+Die folgende Abbildung zeigt einen Screenshot von raspi-config:
+
+.Screenshot von raspi-config 
+image::images/raspi-config.png[Screenshot raspi-config]
+
+Folgende Einstellungen und Änderungen sollen vorgenommen werden:
+
+* Change User Password: Das Kennwort des Benutzers `pi` ändern
+* Hostname: Änderung des Hostnamens in bspw. nistkasten
+* Localisation Options: Änderung/Ergänzung von locales, bspw. de_DE.UTF-8 UTF-8
+* Interface Options: Einstellungen zu Schnittstellen
+** Camera: Kamera aktivieren
+** SSH: Aktivierung des SSH-Servers (to be sure …)
+** I2C: Aktivierung der I2C-Schnittstelle auf dem GPIO
+* Overclocking: Modest 800MHz ARM, 250MHz Core, 400MHz SDRAM, 0 Overvolt.
+* Advanced Options:
+** Expand Filesystem: Dateisystem auf die komplette Größe der SD-Karte ausdehnen.
+
+[IMPORTANT]
+Unbedingt das Kennwort für den Benutzer `pi` ändern, um einen unbefugten Zugriff
+auf den Raspberry Pi zu verhundern!
+
+[IMPORTANT]
+Zu starkes Overclocking erhöht die Leistungsaufnahme und kann ohne geeignete
+Kühlung zu Abschaltungen oder Zerstörung des Raspbery Pi führen!
+
+Nach dem Verlassen von raspi-config wird der Raspberry Pi gebootet, damit die
+Einstellungen wirksam werden.
+
+Software-Update und Zeitzonen-Einstellungen
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Wir verbinden uns erneut per SSH mit dem Raspberry Pi, führen ein
+Software-Update aus und installieren nun grundlegend wichtige Programme:
+
+ pi $ sudo apt-get update
+ pi $ sudo apt-get upgrade
+
+Die Zeitzone des Raspberry Pi ändern wir von UTC zu CE(S)T (Europe/Berlin):
+
+ pi $ dpkg-reconfigure tzdata
+
+Solange eine Verbindung zum Internet besteht, synchronisiert der Raspberry Pi
+seine lokale Zeit mit einem NTP-Server (Network Time Protocol). Der Raspberry Pi
+hat keine Real Time Clock, um die Systemzeit fortzuschreiben, auch wenn er
+ausgeschaltet ist.
+
+Nun installieren wir einige grundlegend wichtige Programme (alles hinter dem
+Zeichen # sind Kommentare und müssen nicht eingegeben werden):
+
+ pi $ sudo apt-get install tmux # Terminal-Multiplexer
+
+Der Terminalmultiplexer tmux (https://tmux.github.io/) erlaubt die
+Wiederaufnahme einer Session selbst bei Abbruch der Netzwerkverbindung. Damit
+ist es insbesondere dann wichtig, falls man sich über eine schlechte
+WiFi-Verbindung mit dem Raspberry Pi via ssh verbindet.
+
+ pi $ sudo apt-get install git # Code Versions-Verwaltung
+
+Über git (https://git-scm.com/) installieren und updaten wir einige
+Applikationen der Nistkasten-Software.
+
+ pi $ sudo apt-get install htop # Systemleistungs-Anzeige
+
+Über htop (http://hisham.hm/htop/) lassen sich eine Reihe von System-Parameter
+im Terminal monitoren.
+
+Damit ist die grundlegende Konfiguration des Raspberry Pi abgeschlossen. Vor dem
+Abziehen der Versorgungsspannung ist der Raspberry Pi stets ordentlich
+herunterzufahren, um eine Beschädigung der SD-Karte und damit einen Datenverlust
+zu vermeiden. Das geht im Terminal mit folgendem Befehl:
+
+ pi $ sudo halt
+
+
